@@ -59,14 +59,14 @@ else
 fi
 
 echo "[!] Encrypt boot partition"
-cryptsetup ${CRYPTSETUP_OPTS} luksFormat -c aes-xts-plain64 -s 512 /dev/${DEVNAME}${BOOTPART}
+cryptsetup ${CRYPTSETUP_OPTS} luksFormat -c aes-xts-plain64 -s 512 /dev/${DEVNAME}p${BOOTPART}
 echo "[!] Open boot partition"
-cryptsetup luksOpen /dev/${DEVNAME}${BOOTPART} crypt-boot
+cryptsetup luksOpen /dev/${DEVNAME}p${BOOTPART} crypt-boot
 
 echo "[!] Encrypt root partition"
-cryptsetup ${CRYPTSETUP_OPTS} luksFormat -c aes-xts-plain64 -s 512 /dev/${DEVNAME}${DEVPART}
+cryptsetup ${CRYPTSETUP_OPTS} luksFormat -c aes-xts-plain64 -s 512 /dev/${DEVNAME}p${DEVPART}
 echo "[!] Open root partition"
-cryptsetup luksOpen /dev/${DEVNAME}${DEVPART} crypt-pool
+cryptsetup luksOpen /dev/${DEVNAME}p${DEVPART} crypt-pool
 
 # Now create VG
 pvcreate /dev/mapper/crypt-pool
@@ -80,7 +80,7 @@ fi
 
 # Format filesystems
 if [ $UEFI ]; then
-  mkfs.vfat /dev/${DEVNAME}1
+  mkfs.vfat /dev/${DEVNAME}p1
 fi
 mkfs.ext4 -L boot /dev/mapper/crypt-boot
 for FS in ${!LV[@]}; do
@@ -107,7 +107,7 @@ done
 if [ $UEFI ]; then
   mount /dev/mapper/crypt-boot /mnt/boot
   mkdir /mnt/boot/efi
-  mount /dev/${DEVNAME}1 /mnt/boot/efi
+  mount /dev/${DEVNAME}p1 /mnt/boot/efi
 else
   mount /dev/mapper/crypt-boot /mnt/boot
 fi
@@ -143,7 +143,7 @@ done
 echo "tmpfs       /tmp    tmpfs   size=1G,noexec,nodev,nosuid     0 0" >> /mnt/etc/fstab
 
 if [ $UEFI ]; then
-  echo "/dev/${DEVNAME}1   /boot/efi   vfat    defaults    0 0" >> /mnt/etc/fstab
+  echo "/dev/${DEVNAME}p1   /boot/efi   vfat    defaults    0 0" >> /mnt/etc/fstab
 fi
 
 if [ $SWAP -eq 1 ]; then
@@ -162,8 +162,8 @@ chroot /mnt grub-install /dev/${DEVNAME}
 # Now tune the cryptsetup
 KERNEL_VER=$(xbps-query -r /mnt -s linux4 | cut -f 2 -d ' ' | cut -f 1 -d -)
 
-LUKS_BOOT_UUID="$(lsblk -o NAME,UUID | grep ${DEVNAME}${BOOTPART} | awk '{print $2}')"
-LUKS_DATA_UUID="$(lsblk -o NAME,UUID | grep ${DEVNAME}${DEVPART} | awk '{print $2}')"
+LUKS_BOOT_UUID="$(lsblk -o NAME,UUID | grep ${DEVNAME}p${BOOTPART} | awk '{print $2}')"
+LUKS_DATA_UUID="$(lsblk -o NAME,UUID | grep ${DEVNAME}p${DEVPART} | awk '{print $2}')"
 echo "GRUB_CMDLINE_LINUX=\"rd.vconsole.keymap=${KEYMAP} rd.lvm=1 rd.luks=1 rd.luks.allow-discards rd.luks.uuid=${LUKS_BOOT_UUID} rd.luks.uuid=${LUKS_DATA_UUID}\"" >> /mnt/etc/default/grub
 
 chroot /mnt grub-mkconfig -o /boot/grub/grub.cfg
