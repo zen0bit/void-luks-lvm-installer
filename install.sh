@@ -21,6 +21,7 @@ else
   LV[root]="10G"
   LV[var]="5G"
   LV[home]="512M"
+  TMPSIZE="2G"
 fi
 
 # Detect if we're in UEFI or legacy mode
@@ -140,7 +141,7 @@ echo "LABEL=boot  /boot   ext4    rw,relatime,data=ordered,discard    0 0" >> /m
 for FS in $(for key in "${!LV[@]}"; do printf '%s\n' "$key"; done| sort); do
   echo "LABEL=${FS/\//_}  /${FS}	ext4    rw,relatime,data=ordered,discard    0 0" >> /mnt/etc/fstab
 done
-echo "tmpfs       /tmp    tmpfs   size=1G,noexec,nodev,nosuid     0 0" >> /mnt/etc/fstab
+echo "tmpfs       /tmp    tmpfs   size=${TMPSIZE},noexec,nodev,nosuid     0 0" >> /mnt/etc/fstab
 
 if [ $UEFI ]; then
   echo "/dev/${DEVNAME}p1   /boot/efi   vfat    defaults    0 0" >> /mnt/etc/fstab
