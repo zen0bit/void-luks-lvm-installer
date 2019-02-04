@@ -170,6 +170,13 @@ echo "GRUB_CMDLINE_LINUX=\"rd.vconsole.keymap=${KEYMAP} rd.lvm=1 rd.luks=1 rd.lu
 chroot /mnt grub-mkconfig -o /boot/grub/grub.cfg
 chroot /mnt xbps-reconfigure -f ${KERNEL_VER}
 
+# Add user account
+if [ -n "${USERACCT}" ]; then
+  useradd -G wheel,floppy,audio,video,cdrom,optical,kvm,users -m -s /bin/zsh ${USERACCT}
+  echo "[!] Setting password for ${USERACCT}"
+  passwd -R /mnt ${USERACCT}
+fi
+
 # Now add customization to installation
 echo "[!] Running custom scripts"
 if [ -d ./custom ]; then
