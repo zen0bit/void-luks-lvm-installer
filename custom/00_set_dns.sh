@@ -1,5 +1,4 @@
 #!/bin/bash
 
-# Install additional packages
+# Setup temporary DNS
 echo "nameserver 8.8.8.8" > /etc/resolv.conf
-xbps-install -y -S vim
