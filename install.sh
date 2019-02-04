@@ -128,7 +128,7 @@ passwd -R /mnt root
 echo $HOSTNAME > /mnt/etc/hostname
 echo "TIMEZONE=${TIMEZONE}" >> /mnt/etc/rc.conf
 echo "KEYMAP=${KEYMAP}" >> /mnt/etc/rc.conf
-echo "TTYS=2" >> /mnt/etc/rc.conf
+echo "TTYS=3" >> /mnt/etc/rc.conf
 
 echo "LANG=$LANG" > /mnt/etc/locale.conf
 echo "$LANG $(echo ${LANG} | cut -f 2 -d .)" >> /mnt/etc/default/libc-locales
