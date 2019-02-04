@@ -35,9 +35,6 @@ if [ $CPU_VENDOR = "GenuineIntel" ]; then
   PKG_LIST="$PKG_LIST intel-ucode"
 fi
 
-# Install requirements
-xbps-install -y -S -f cryptsetup parted lvm2
-
 # Wipe /dev/${DEVNAME}
 dd if=/dev/zero of=/dev/${DEVNAME} bs=1M count=100
 if [ $UEFI ]; then
