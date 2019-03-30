@@ -1,6 +1,10 @@
 #!/bin/bash
 set -e
 
+set -u
+GPGPUBKEY="$1"
+set +u
+
 # Explicitely declare our LV array
 declare -A LV
 
@@ -31,17 +35,34 @@ if [ $UEFI ]; then
 fi
 
 # Detect if we're on an Intel system
-CPU_VENDOR=$(grep vendor_id /proc/cpuinfo | awk '{print $3}')
+CPU_VENDOR=$(grep vendor_id /proc/cpuinfo | awk '{print $3}' | uniq)
 if [ $CPU_VENDOR = "GenuineIntel" ]; then
   PKG_LIST="$PKG_LIST intel-ucode"
 fi
 
-# Wipe /dev/${DEVNAME}
+# Import GPG key
+export GNUPGHOME=/root/.gnupg
+gpg2 --import $GPGPUBKEY
+
+# Create LUKS key and encrypt it with GPG
+LUKSKEY="/root/luks.key"
+LUKSKEYENC="${LUKSKEY}.gpg"
+dd if=/dev/urandom count=64 > "$LUKSKEY"
+GPGID=$(gpg2 --with-colons --fingerprint | awk -F: '$1 == "fpr" {print $10;}' | head -1)
+echo "$PASSPHRASE" | gpg2 --passphrase-fd 0 --always-trust -r "$GPGID" --encrypt "$LUKSKEY"
+
+# Wipe entire drive
 dd if=/dev/zero of=/dev/${DEVNAME} bs=1M count=100
 if [ $UEFI ]; then
   parted /dev/${DEVNAME} mklabel gpt
+  # EFI partition
   parted -a optimal /dev/${DEVNAME} mkpart primary 2048s 100M
+  # Unencrypted /boot partition
+  # This needs to be unencrypted since it contains the initramfs
+  # image which has GnuPG to be able to decrypt the LUKS key and the
+  # rest of the system.
   parted -a optimal /dev/${DEVNAME} mkpart primary 100M 612M
+  # Encrypted LUKS partition for LVM
   parted -a optimal /dev/${DEVNAME} mkpart primary 612M 100%
 else
   parted /dev/${DEVNAME} mklabel msdos
@@ -50,28 +71,25 @@ else
 fi
 parted /dev/${DEVNAME} set 1 boot on
 
-# Encrypt partitions
 if [ $UEFI ]; then
   BOOTPART="2"
-  DEVPART="3"
+  DATAPART="3"
 else
   BOOTPART="1"
-  DEVPART="2"
+  DATAPART="2"
 fi
 
-echo "[!] Encrypt boot partition"
-cryptsetup ${CRYPTSETUP_OPTS} luksFormat -c aes-xts-plain64 -s 512 /dev/${DEVNAME}p${BOOTPART}
-echo "[!] Open boot partition"
-cryptsetup luksOpen /dev/${DEVNAME}p${BOOTPART} crypt-boot
+# Open smart card
+gpg2 --card-status
 
 echo "[!] Encrypt root partition"
-cryptsetup ${CRYPTSETUP_OPTS} luksFormat -c aes-xts-plain64 -s 512 /dev/${DEVNAME}p${DEVPART}
+gpg2 --quiet --decrypt "$LUKSKEYENC" | cryptsetup -d - ${CRYPTSETUP_OPTS} luksFormat -c aes-xts-plain64 -s 512 /dev/${DEVNAME}p${DATAPART}
 echo "[!] Open root partition"
-cryptsetup luksOpen /dev/${DEVNAME}p${DEVPART} crypt-pool
+gpg2 --quiet --decrypt "$LUKSKEYENC" | cryptsetup -d - luksOpen /dev/${DEVNAME}p${DATAPART} void
 
-# Now create VG
-pvcreate /dev/mapper/crypt-pool
-vgcreate ${VGNAME} /dev/mapper/crypt-pool
+# Create volume group
+pvcreate /dev/mapper/void
+vgcreate ${VGNAME} /dev/mapper/void
 for FS in ${!LV[@]}; do
   lvcreate -L ${LV[$FS]} -n ${FS/\//_} ${VGNAME}
 done
@@ -83,7 +101,7 @@ fi
 if [ $UEFI ]; then
   mkfs.vfat /dev/${DEVNAME}p1
 fi
-mkfs.ext4 -L boot /dev/mapper/crypt-boot
+mkfs.ext2 -L boot /dev/${DEVNAME}p${BOOTPART}
 for FS in ${!LV[@]}; do
   mkfs.ext4 -L ${FS/\//_} /dev/mapper/${VGNAME}-${FS/\//_}
 done
@@ -91,29 +109,29 @@ if [ $SWAP -eq 1 ]; then
   mkswap -L swap /dev/mapper/${VGNAME}-swap
 fi
 
-
-# Mount them
+# Mount filesystems
 mount /dev/mapper/${VGNAME}-root /mnt
 for dir in dev proc sys boot; do
   mkdir /mnt/${dir}
 done
 
-## Remove root and sort keys
+# Remove root and sort keys
 unset LV[root]
-for FS in $(for key in "${!LV[@]}"; do printf '%s\n' "$key"; done| sort); do
+for FS in $(for key in "${!LV[@]}"; do printf '%s\n' "$key"; done | sort); do
   mkdir -p /mnt/${FS}
   mount /dev/mapper/${VGNAME}-${FS/\//_} /mnt/${FS}
 done
 
 if [ $UEFI ]; then
-  mount /dev/mapper/crypt-boot /mnt/boot
+  mount /dev/${DEVNAME}p${BOOTPART} /mnt/boot
   mkdir /mnt/boot/efi
   mount /dev/${DEVNAME}p1 /mnt/boot/efi
 else
-  mount /dev/mapper/crypt-boot /mnt/boot
+  mount /dev/${DEVNAME}p${BOOTPART} /mnt/boot
 fi
 
-for fs in dev proc sys; do
+for fs in dev proc sys srv; do
+  mkdir -p /mnt/${fs}
   mount -o bind /${fs} /mnt/${fs}
 done
 
@@ -137,7 +155,7 @@ chroot /mnt xbps-reconfigure -f glibc-locales
 
 # Add fstab entries
 echo "LABEL=root  /       ext4    rw,relatime,data=ordered,discard    0 0" > /mnt/etc/fstab
-echo "LABEL=boot  /boot   ext4    rw,relatime,data=ordered,discard    0 0" >> /mnt/etc/fstab
+echo "LABEL=boot  /boot   ext2    defaults    0 0" >> /mnt/etc/fstab
 for FS in $(for key in "${!LV[@]}"; do printf '%s\n' "$key"; done| sort); do
   echo "LABEL=${FS/\//_}  /${FS}	ext4    rw,relatime,data=ordered,discard    0 0" >> /mnt/etc/fstab
 done
@@ -160,33 +178,54 @@ EOF
 sed -i 's/GRUB_BACKGROUND.*/#&/' /mnt/etc/default/grub
 chroot /mnt grub-install /dev/${DEVNAME}
 
-# Now tune the cryptsetup
-KERNEL_VER=$(xbps-query -r /mnt -s linux4 | cut -f 2 -d ' ' | cut -f 1 -d -)
+# Make GPG identity available to Dracut / initramfs
+gpg2 --armor --export-options export-minimal --export "$GPGID" > /mnt/etc/dracut.conf.d/crypt-public-key.gpg
 
-LUKS_BOOT_UUID="$(lsblk -o NAME,UUID | grep ${DEVNAME}p${BOOTPART} | awk '{print $2}')"
-LUKS_DATA_UUID="$(lsblk -o NAME,UUID | grep ${DEVNAME}p${DEVPART} | awk '{print $2}')"
-echo "GRUB_CMDLINE_LINUX=\"rd.vconsole.keymap=${KEYMAP} rd.lvm=1 rd.luks=1 rd.luks.allow-discards rd.luks.uuid=${LUKS_BOOT_UUID} rd.luks.uuid=${LUKS_DATA_UUID}\"" >> /mnt/etc/default/grub
+cp "$LUKSKEYENC" /mnt/boot/
 
-chroot /mnt grub-mkconfig -o /boot/grub/grub.cfg
-chroot /mnt xbps-reconfigure -f ${KERNEL_VER}
+# Enable Dracut modules to decrypt LUKS keyfile
+mkdir -p /mnt/etc/dracut.conf.d/
+echo 'add_dracutmodules+="crypt crypt-gpg lvm"' >> /mnt/etc/dracut.conf.d/00-crypt-gpg.conf
+
+# Register LUKS volume
+LUKS_DATA_UUID="$(lsblk -o NAME,UUID | grep ${DEVNAME}p${DATAPART} | awk '{print $2}')"
+echo "GRUB_CMDLINE_LINUX=\"rd.vconsole.keymap=${KEYMAP} rd.lvm=1 rd.luks=1 \
+rd.luks.allow-discards rd.auto=1 rd.luks.uuid=${LUKS_DATA_UUID} rd.luks.key=/luks.key.gpg\"" \
+  >> /mnt/etc/default/grub
 
 # Add user account
 if [ -n "${USERACCT}" ]; then
-  useradd -G wheel,floppy,audio,video,cdrom,optical,kvm,users -m -s /bin/zsh ${USERACCT}
+  useradd -R /mnt -G wheel,floppy,audio,video,cdrom,optical,kvm,users -m -s /bin/bash ${USERACCT}
   echo "[!] Setting password for ${USERACCT}"
   passwd -R /mnt ${USERACCT}
 fi
 
-# Now add customization to installation
+# Set temporary DNS for custom system setup
+echo "nameserver 8.8.8.8" > /mnt/etc/resolv.conf
+
+# Bind mount the GnuPG socket directory inside the chroot to make GnuPG and SSH
+# auth work during the custom setup phase.
+mkdir -p /mnt/tmp/.gnupg && chmod 700 $_
+mount -o bind $GNUPGHOME /mnt/tmp/.gnupg
+
+# Custom setup of rest of the system
 echo "[!] Running custom scripts"
 if [ -d ./custom ]; then
-  cp -r ./custom /mnt/tmp
+  cp -r ./custom /mnt/tmp/
+  cp ./config /mnt/var/tmp/
 
-  # If we detect any .sh let's run them in the chroot
+  # If we detect any .sh let's run them in the chroot with the custom
+  # config environment
   for SHFILE in /mnt/tmp/custom/*.sh; do
-    chroot /mnt sh /tmp/custom/$(basename $SHFILE)
+    chroot /mnt env - bash -c \
+      "set -o allexport; . /var/tmp/config; set +o allexport; bash /tmp/custom/$(basename $SHFILE)"
   done
 
   # Then cleanup chroot
   rm -rf /mnt/tmp/custom
 fi
+
+# Regenerate GRUB config and initramfs image
+# This needs to happen last to take into account any changes during custom setup
+KERNEL_VER=$(xbps-query -r /mnt -s linux4 | cut -f 2 -d ' ' | cut -f 1 -d -)
+chroot /mnt xbps-reconfigure -f ${KERNEL_VER}
