@@ -14,3 +14,6 @@ LV[home]="300G"
 TMPSIZE="16G"
 USERACCT="ivan"
 PASSPHRASE=""
+
+# Applications
+PYTHON_VERSION=3.7.3
