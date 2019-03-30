@@ -1,3 +1,3 @@
 #!/bin/bash
 
-xbps-install -Sy graphviz ImageMagick mediainfo || true
+xbps-install -Sy feh graphviz ImageMagick mediainfo || true

@@ -4,9 +4,9 @@
 #xbps-install -Sy void-repo-nonfree
 # XXX: Not installing nvidia because it breaks scdaemon/gpg in initramfs
 
-xbps-install -Sy compton feh readline transset rxvt-unicode unclutter-xfixes \
-  xclip xdotool xinput xf86-video-intel xfontsel xmessage xorg-fonts \
-  xorg-minimal xprop xrandr xrdb xsel xset xsetroot xterm xtitle \
+xbps-install -Sy compton rxvt-unicode transset xclip xdotool xf86-video-intel \
+  xinput xfontsel xmessage xorg-fonts xorg-minimal xprop xrandr xrdb xsel xset \
+  xsetroot xterm xtitle \
 || true
 
 # Blacklist nouveau driver since it causes kernel panic
