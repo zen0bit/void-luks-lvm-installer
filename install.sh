@@ -195,7 +195,7 @@ rd.luks.allow-discards rd.auto=1 rd.luks.uuid=${LUKS_DATA_UUID} rd.luks.key=/luk
 
 # Add user account
 if [ -n "${USERACCT}" ]; then
-  useradd -R /mnt -G wheel,floppy,audio,video,cdrom,optical,kvm,users -m -s /bin/bash ${USERACCT}
+  useradd -R /mnt -G disk,input,kvm,optical,storage,users,video,wheel -m -s /bin/bash ${USERACCT}
   echo "[!] Setting password for ${USERACCT}"
   passwd -R /mnt ${USERACCT}
 fi
