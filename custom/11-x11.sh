@@ -6,7 +6,7 @@
 
 xbps-install -Sy compton rxvt-unicode transset xclip xdotool xf86-video-intel \
   xinput xfontsel xmessage xorg-fonts xorg-minimal xprop xrandr xrdb xsel xset \
-  xsetroot xterm xtitle \
+  xsetroot xterm xtitle xwinwrap \
 || true
 
 # Blacklist nouveau driver since it causes kernel panic
