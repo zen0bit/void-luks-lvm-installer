@@ -1,0 +1,8 @@
+#!/bin/bash
+
+# Symlink $HOME/.cache to a RAM disk for faster I/O
+rsync -ar /home/ivan/.cache/ /dev/shm/cache
+rm -rf /home/ivan/.cache
+ln -sfn /dev/shm/cache /home/ivan/.cache
+chmod -R 0700 /dev/shm/cache
+exec sleep inf
