@@ -195,7 +195,7 @@ rd.luks.allow-discards rd.auto=1 rd.luks.uuid=${LUKS_DATA_UUID} rd.luks.key=/luk
 
 # Add user account
 if [ -n "${USERACCT}" ]; then
-  useradd -R /mnt -G disk,input,kvm,optical,storage,users,video,wheel -m -s /bin/bash ${USERACCT}
+  useradd -R /mnt -G disk,input,optical,storage,users,video,wheel -m -s /bin/bash ${USERACCT}
   # Enable sudo for users in 'wheel' group
   sed -i 's:^# \(%wheel ALL=(ALL) ALL\)$:\1:' /mnt/etc/sudoers
   echo "[!] Setting password for ${USERACCT}"
