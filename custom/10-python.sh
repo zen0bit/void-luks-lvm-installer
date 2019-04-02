@@ -5,16 +5,17 @@ xbps-install -Sy bzip2-devel libffi-devel liblzma-devel libressl-devel \
   || true
 
 # Install pyenv, the specified Python version and additional packages
-su -w PYTHON_VERSION - ${USERACCT} <<'EOF'
-export PYENV_ROOT=$HOME/.pyenv PATH=$PYENV_ROOT/bin:$PATH
+su -w PYTHON_VERSION - ${USERACCT} bash -c '
+PYENV_ROOT=$HOME/.pyenv PATH=$PYENV_ROOT/bin:$PATH
+eval "$(pyenv init -)"
 test -d $PYENV_ROOT || git clone https://github.com/pyenv/pyenv.git $PYENV_ROOT
-pyenv install ${PYTHON_VERSION}
-git clone https://github.com/pyenv/pyenv-virtualenv.git $HOME/.pyenv/plugins/pyenv-virtualenv
+pyenv install --skip-existing ${PYTHON_VERSION}
+test -d $HOME/.pyenv/plugins/pyenv-virtualenv || git clone https://github.com/pyenv/pyenv-virtualenv.git $HOME/.pyenv/plugins/pyenv-virtualenv
 pyenv global ${PYHON_VERSION}
 
 # Python packages
-pip install glances pinboard
+pip install glances pinboard s-tui
 
 # Fix bug in pinboard package
-chmod +x $PYENV_ROOT/versions/$PYTHON_VERSION/bin/pinboard
-EOF
+chmod +x $(pyenv which pinboard)
+'
