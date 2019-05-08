@@ -1,3 +1,3 @@
 #!/bin/bash
 
-xbps-install -Sy mpv youtube-dl || true
+xbps-install -Sy gst-libav gst-plugins-good1 mpv youtube-dl || true

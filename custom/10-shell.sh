@@ -1,5 +1,5 @@
 #!/bin/bash
 
-xbps-install -Sy zsh exa fzf || true
+xbps-install -Sy exa fd fzf moreutils zsh || true
 
 chsh -s /bin/zsh ivan

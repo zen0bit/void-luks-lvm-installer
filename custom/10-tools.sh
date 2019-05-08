@@ -1,3 +1,3 @@
 #!/bin/bash
 
-xbps-install -Sy pass || true
+xbps-install -Sy pass words-mnemonic || true

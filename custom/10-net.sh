@@ -1,6 +1,7 @@
 #!/bin/bash
 
-xbps-install -Sy curl dhcpcd openbsd-netcat wifi-firmware wget wpa_supplicant || true
+xbps-install -Sy bind-utils curl dhcpcd net-tools openbsd-netcat wifi-firmware \
+  wget wpa_supplicant || true
 
 # Enable services
 ln -sfn /usr/share/dhcpcd/hooks/10-wpa_supplicant /usr/libexec/dhcpcd-hooks

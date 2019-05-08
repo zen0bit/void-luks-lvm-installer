@@ -5,9 +5,9 @@
 # XXX: Not installing nvidia because it breaks scdaemon/gpg in initramfs
 
 xbps-install -Sy \
-  compton redshift transset xbacklight xclip xdotool xf86-video-intel xinput \
-  xfontsel xmessage xorg-fonts xorg-minimal xprop xrandr xrdb xsel xset \
-  xsetroot xterm xtitle xwinwrap \
+  compton redshift scrot transset xbacklight xclip xdg-utils xdotool \
+  xf86-video-intel xhost xinput xfontsel xmessage xorg-fonts xorg-minimal \
+  xprop xrandr xrdb xsel xset xsetroot xterm xtitle xwinwrap \
 || true
 
 # Blacklist nouveau driver since it causes kernel panic
