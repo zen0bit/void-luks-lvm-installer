@@ -10,6 +10,14 @@ xbps-install -Sy \
   xprop xrandr xrdb xsel xset xsetroot xterm xtitle xwinwrap \
 || true
 
+xbps-install -Sy pam-devel
+su - ${USERACCT} bash -c '
+test -d ~/src/sxlock || git clone https://github.com/lahwaacz/sxlock.git ~/src/sxlock
+cd ~/src/sxlock && make
+'
+xbps-remove -Ry pam-devel
+make -C /home/${USERACCT}/src/sxlock install
+
 # Blacklist nouveau driver since it causes kernel panic
 sed -i 's:\(^GRUB_CMDLINE_LINUX.*\)"$:\1 modprobe.blacklist=nouveau":' /etc/default/grub
 
