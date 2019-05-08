@@ -14,6 +14,7 @@ LV[home]="300G"
 TMPSIZE="16G"
 USERACCT="ivan"
 PASSPHRASE=""
+PATH="/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin"
 
 # Applications
 PYTHON_VERSION=3.7.3
