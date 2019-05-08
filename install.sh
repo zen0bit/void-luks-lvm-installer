@@ -130,7 +130,7 @@ else
   mount /dev/${DEVNAME}p${BOOTPART} /mnt/boot
 fi
 
-for fs in dev proc sys srv; do
+for fs in dev proc sys; do
   mkdir -p /mnt/${fs}
   mount -o bind /${fs} /mnt/${fs}
 done
@@ -142,7 +142,6 @@ cp -a /var/db/xbps/keys/* /mnt/var/db/xbps/keys/
 xbps-install -y -S \
   -R https://alpha.de.repo.voidlinux.org/current \
   -R https://alpha.de.repo.voidlinux.org/current/nonfree \
-  -R /srv/localrepo \
   -r /mnt $PKG_LIST
 
 # Do a bit of customization

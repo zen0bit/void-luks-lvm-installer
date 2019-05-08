@@ -1,4 +1,4 @@
-PKG_LIST="base-system lvm2-2.02.181_1 cryptsetup grub"
+PKG_LIST="base-system lvm2 cryptsetup grub"
 HOSTNAME="work"
 KEYMAP="us"
 TIMEZONE="Europe/Amsterdam"
