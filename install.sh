@@ -139,7 +139,11 @@ done
 mkdir -p /mnt/var/db/xbps/keys/
 cp -a /var/db/xbps/keys/* /mnt/var/db/xbps/keys/
 
-xbps-install -y -S -R https://alpha.de.repo.voidlinux.org/current -R /srv/localrepo -r /mnt $PKG_LIST
+xbps-install -y -S \
+  -R https://alpha.de.repo.voidlinux.org/current \
+  -R https://alpha.de.repo.voidlinux.org/current/nonfree \
+  -R /srv/localrepo \
+  -r /mnt $PKG_LIST
 
 # Do a bit of customization
 echo "[!] Setting root password"
