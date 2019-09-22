@@ -242,6 +242,6 @@ fi
 
 # Regenerate GRUB config and initramfs image
 # This needs to happen last to take into account any changes during custom setup
-KERNEL_VER=$(xbps-query -r /mnt -s linux4 | cut -f 2 -d ' ' | cut -f 1 -d -)
+KERNEL_VER=$(xbps-query -r /mnt -s linux5 | cut -f 2 -d ' ' | cut -f 1 -d -)
 chroot /mnt xbps-reconfigure -f ${KERNEL_VER}
 sync
