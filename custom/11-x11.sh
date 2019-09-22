@@ -1,12 +1,11 @@
 #!/bin/bash
 
 # Enable nonfree repo for NVIDIA drivers
-#xbps-install -Sy void-repo-nonfree
-# XXX: Not installing nvidia because it breaks scdaemon/gpg in initramfs
+xbps-install -Sy void-repo-nonfree || true
 
 xbps-install -Sy \
-  compton redshift scrot transset xbacklight xclip xdg-utils xdotool \
-  xf86-video-intel xhost xinput xfontsel xmessage xorg-fonts xorg-minimal \
+  brillo compton nvidia redshift scrot transset xbacklight xclip xdg-utils xdotool \
+  xev xf86-video-intel xhost xinput xfontsel xmessage xorg-fonts xorg-minimal \
   xprop xrandr xrdb xsel xset xsetroot xterm xtitle xwinwrap \
 || true
 
@@ -20,6 +19,10 @@ make -C /home/${USERACCT}/src/sxlock install
 
 # Blacklist nouveau driver since it causes kernel panic
 sed -i 's:\(^GRUB_CMDLINE_LINUX.*\)"$:\1 modprobe.blacklist=nouveau":' /etc/default/grub
+
+# Fix nvidia breaking scdaemon/gpg in initramfs because it disables drm in the initramfs image.
+# Why does scdaemon/gpg depend on drm, and why do I need nvidia drivers in initramfs? ¯\_(ツ)_/¯
+mv /usr/lib/dracut/dracut.conf.d/99-nvidia.conf{,.$(date '+%Y%m%d')}
 
 # Make surf the default web browser
 if [ -n "${USERACCT}" ]; then
