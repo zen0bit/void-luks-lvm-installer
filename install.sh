@@ -71,13 +71,13 @@ if [ $UEFI ]; then
   # This needs to be unencrypted since it contains the initramfs
   # image which has GnuPG to be able to decrypt the LUKS key and the
   # rest of the system.
-  parted -a optimal /dev/${DEVNAME} mkpart primary 100M 612M
+  parted -a optimal /dev/${DEVNAME} mkpart primary 100M 1124M
   # Encrypted LUKS partition for LVM
-  parted -a optimal /dev/${DEVNAME} mkpart primary 612M 100%
+  parted -a optimal /dev/${DEVNAME} mkpart primary 1124M 100%
 else
   parted /dev/${DEVNAME} mklabel msdos
-  parted -a optimal /dev/${DEVNAME} mkpart primary 2048s 512M
-  parted -a optimal /dev/${DEVNAME} mkpart primary 512M 100%
+  parted -a optimal /dev/${DEVNAME} mkpart primary 2048s 1G
+  parted -a optimal /dev/${DEVNAME} mkpart primary 1G 100%
 fi
 parted /dev/${DEVNAME} set 1 boot on
 
