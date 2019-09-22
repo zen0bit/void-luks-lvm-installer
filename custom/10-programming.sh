@@ -1,6 +1,6 @@
 #!/bin/bash
 
-xbps-install -Sy emacs-gtk3 jq qemu ripgrep vim || true
+xbps-install -Sy android-tools cargo emacs-gtk3 go jq qemu ripgrep vim || true
 
 
 if [ -n "$USERACCT" ]; then

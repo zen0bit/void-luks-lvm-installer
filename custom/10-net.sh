@@ -1,7 +1,7 @@
 #!/bin/bash
 
-xbps-install -Sy bind-utils dhcpcd net-tools openbsd-netcat wifi-firmware \
-  wpa_supplicant || true
+xbps-install -Sy bind-utils chromium dhcpcd firefox mktorrent net-tools nmap \
+  openbsd-netcat tcpdump wifi-firmware wpa_supplicant wireshark-qt youtube-dl || true
 
 # Enable services
 ln -sfn /usr/share/dhcpcd/hooks/10-wpa_supplicant /usr/libexec/dhcpcd-hooks

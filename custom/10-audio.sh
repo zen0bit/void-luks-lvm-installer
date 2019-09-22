@@ -1,6 +1,6 @@
 #!/bin/bash
 
-xbps-install -Sy alsa-utils dbus pulseaudio || true
+xbps-install -Sy alsa-utils dbus pamixer pavucontrol pulseaudio sox || true
 
 # Enable dbus for pulseaudio
 ln -sfn /etc/sv/dbus /var/service/

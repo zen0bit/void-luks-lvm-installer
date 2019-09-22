@@ -1,3 +1,3 @@
 #!/bin/bash
 
-xbps-install -Sy feh graphviz ImageMagick mediainfo || true
+xbps-install -Sy audacity cuetools feh ffmpeg flac gimp graphviz ImageMagick mediainfo opus || true
