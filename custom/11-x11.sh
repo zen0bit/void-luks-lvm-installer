@@ -17,8 +17,8 @@ cd ~/src/sxlock && make
 xbps-remove -Ry pam-devel
 make -C /home/${USERACCT}/src/sxlock install
 
-# Blacklist nouveau driver since it causes kernel panic
-sed -i 's:\(^GRUB_CMDLINE_LINUX.*\)"$:\1 modprobe.blacklist=nouveau":' /etc/default/grub
+# Blacklist nouveau driver since it causes kernel panic, and enable VSync
+sed -i 's:\(^GRUB_CMDLINE_LINUX.*\)"$:\1 modprobe.blacklist=nouveau nvidia-drm.modeset=1":' /etc/default/grub
 
 # Fix nvidia breaking scdaemon/gpg in initramfs because it disables drm in the initramfs image.
 # Why does scdaemon/gpg depend on drm, and why do I need nvidia drivers in initramfs? ¯\_(ツ)_/¯
