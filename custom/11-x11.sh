@@ -6,7 +6,7 @@ xbps-install -Sy void-repo-nonfree || true
 xbps-install -Sy \
   brillo compton nvidia redshift scrot transset xbacklight xclip xdg-utils xdotool \
   xev xf86-video-intel xhost xinput xfontsel xmessage xorg-fonts xorg-minimal \
-  xprop xrandr xrdb xsel xset xsetroot xterm xtitle xwinwrap \
+  xprop xob xrandr xrdb xsel xset xsetroot xterm xtitle xwinwrap \
 || true
 
 xbps-install -Sy pam-devel
