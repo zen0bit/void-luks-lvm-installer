@@ -1,5 +1,5 @@
 #!/bin/bash
-set -euxo pipefail
+set -eo pipefail
 
 # Install a Void Linux system to /mnt mounted on a LUKS encrypted
 # volume protected by a GPG encrypted key.
@@ -91,9 +91,10 @@ sed -i 's/GRUB_BACKGROUND.*/#&/' /mnt/etc/default/grub
 chroot /mnt grub-install /dev/${DEVNAME}
 
 # Make GPG identity available to Dracut / initramfs
+GPGID=$(gpg2 --with-colons --fingerprint | awk -F: '$1 == "fpr" {print $10;}' | head -1)
 gpg2 --armor --export-options export-minimal --export "$GPGID" > /mnt/etc/dracut.conf.d/crypt-public-key.gpg
 
-cp "$LUKSKEYENC" /mnt/boot/
+cp luks.key.gpg /mnt/boot/
 
 # Enable Dracut modules to decrypt LUKS keyfile
 mkdir -p /mnt/etc/dracut.conf.d/
@@ -119,5 +120,6 @@ echo "nameserver 8.8.8.8" > /mnt/etc/resolv.conf
 
 # Bind mount the GnuPG socket directory inside the chroot to make GnuPG and SSH
 # auth work during the custom setup phase.
+export GNUPGHOME=/root/.gnupg
 mkdir -p /mnt/tmp/.gnupg && chmod 700 $_
 mount -o bind $GNUPGHOME /mnt/tmp/.gnupg

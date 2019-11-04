@@ -15,7 +15,7 @@ set -u
 GPGPUBKEY="$1"
 set +u
 
-# Explicitely declare our LV array
+# Explicitly declare our LV array
 declare -A LV
 
 # Load config or defaults

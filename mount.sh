@@ -3,16 +3,16 @@ set -euxo pipefail
 
 set -u
 GPGPUBKEY="$1"
-COPYKEY="${2-0}"
+COPYKEY="${2-}"
 set +u
 
-# Explicitely declare our LV array
+# Explicitly declare our LV array
 declare -A LV
 
-# Load config or defaults
+# Load config
 if [ -e ./config ]; then
   . ./config
-else
+fi
 
 # Detect if we're in UEFI or legacy mode
 [ -d /sys/firmware/efi ] && UEFI=1
@@ -70,9 +70,9 @@ function mountfs() {
     done
 }
 
-if [ "$COPYKEY" -gt 0 ]; then
+if [ -n "$COPYKEY" ]; then
+    setupgpg
+    decryptluks
     copykey
 fi
-setupgpg
-decryptluks
 mountfs
