@@ -4,8 +4,8 @@
 xbps-install -Sy void-repo-nonfree || true
 
 xbps-install -Sy \
-  brillo compton nvidia redshift scrot transset xbacklight xclip xdg-utils xdotool \
-  xev xf86-video-intel xhost xinput xfontsel xmessage xorg-fonts xorg-minimal \
+  brillo compton nvidia redshift scrot sres transset xbacklight xclip xdg-utils \
+  xdotool xev xf86-video-intel xhost xinput xfontsel xmessage xorg-fonts xorg-minimal \
   xprop xob xrandr xrdb xsel xset xsetroot xterm xtitle xwinwrap \
 || true
 
