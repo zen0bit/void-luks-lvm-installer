@@ -1,22 +1,10 @@
 #!/bin/bash
-set -euxo pipefail
+set -euo pipefail
 
-# Install a Void Linux system to /mnt mounted on a LUKS encrypted
-# volume protected by a GPG encrypted key.
-#
-# A GPG identity (public key) file is expected as first argument,
-# whose associated private keys should be on a GnuPG smartcard device
-# (YubiKey, etc.).
-#
-# Usage:
-# install.sh <path/to/gpg.pub.key>
+# Install a Void Linux system on a LUKS encrypted volume mounted at /mnt.
 
-set -u
-GPGPUBKEY="$1"
-set +u
-
-./mkpart.sh "$GPGPUBKEY"
-./mount.sh "$GPGPUBKEY"
+./mkpart.sh
+./mount.sh
 ./install-base.sh
 ./install-custom.sh
 ./reconfigure.sh

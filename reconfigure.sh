@@ -1,12 +1,14 @@
 #!/bin/bash
 set -euxo pipefail
 
-# Explicitly declare our LV array
 declare -A LV
 
 # Load config
-if [ -e ./config ]; then
+if [ -r ./config ]; then
   . ./config
+else
+  echo 'Must supply config file' >&2
+  exit 1
 fi
 
 # Regenerate GRUB config and initramfs image

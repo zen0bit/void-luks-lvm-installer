@@ -1,36 +1,17 @@
 #!/bin/bash
-set -eo pipefail
+set -euxo pipefail
 
-# Install a Void Linux system to /mnt mounted on a LUKS encrypted
-# volume protected by a GPG encrypted key.
-#
-# A GPG identity (public key) file is expected as first argument,
-# whose associated private keys should be on a GnuPG smartcard device
-# (YubiKey, etc.).
-#
-# Usage:
-# install.sh <path/to/gpg.pub.key>
+# Install base Void Linux packages
 
-# Explicitly declare our LV array
 declare -A LV
+UEFI=
 
 # Load config or defaults
-if [ -e ./config ]; then
+if [ -r ./config ]; then
   . ./config
 else
-  PKG_LIST="base-system lvm2 cryptsetup grub"
-  HOSTNAME="dom1.internal"
-  KEYMAP="en_US"
-  TIMEZONE="Etc/UTC"
-  LANG="en_US.UTF-8"
-  VGNAME="void"
-  CRYPTSETUP_OPTS=""
-  SWAP=0
-  SWAPSIZE="1G"
-  LV[root]="10G"
-  LV[var]="5G"
-  LV[home]="5G"
-  TMPSIZE="2G"
+  echo 'Must supply config file' >&2
+  exit 1
 fi
 
 # Detect if we're in UEFI or legacy mode
@@ -90,20 +71,14 @@ EOF
 sed -i 's/GRUB_BACKGROUND.*/#&/' /mnt/etc/default/grub
 chroot /mnt grub-install /dev/${DEVNAME}
 
-# Make GPG identity available to Dracut / initramfs
-GPGID=$(gpg2 --with-colons --fingerprint | awk -F: '$1 == "fpr" {print $10;}' | head -1)
-gpg2 --armor --export-options export-minimal --export "$GPGID" > /mnt/etc/dracut.conf.d/crypt-public-key.gpg
-
-cp luks.key.gpg /mnt/boot/
-
-# Enable Dracut modules to decrypt LUKS keyfile
+# Enable LUKS and LVM modules in initramfs
 mkdir -p /mnt/etc/dracut.conf.d/
-echo 'add_dracutmodules+="crypt crypt-gpg lvm"' >> /mnt/etc/dracut.conf.d/00-crypt-gpg.conf
+echo 'add_dracutmodules+="crypt lvm"' >> /mnt/etc/dracut.conf.d/00-crypt-lvm.conf
 
 # Register LUKS volume
 LUKS_DATA_UUID="$(lsblk -o NAME,UUID | grep ${DEVNAME}p${DATAPART} | awk '{print $2}')"
 echo "GRUB_CMDLINE_LINUX=\"rd.vconsole.keymap=${KEYMAP} rd.lvm=1 rd.luks=1 \
-rd.luks.allow-discards rd.auto=1 rd.luks.uuid=${LUKS_DATA_UUID} rd.luks.key=/luks.key.gpg\"" \
+rd.luks.allow-discards rd.auto=1 rd.luks.uuid=${LUKS_DATA_UUID}\"" \
   >> /mnt/etc/default/grub
 
 # Add user account
@@ -117,9 +92,3 @@ fi
 
 # Set temporary DNS for custom system setup
 echo "nameserver 8.8.8.8" > /mnt/etc/resolv.conf
-
-# Bind mount the GnuPG socket directory inside the chroot to make GnuPG and SSH
-# auth work during the custom setup phase.
-export GNUPGHOME=/root/.gnupg
-mkdir -p /mnt/tmp/.gnupg && chmod 700 $_
-mount -o bind $GNUPGHOME /mnt/tmp/.gnupg

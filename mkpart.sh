@@ -1,37 +1,17 @@
 #!/bin/bash
 set -euxo pipefail
 
-# Install a Void Linux system to /mnt mounted on a LUKS encrypted
-# volume protected by a GPG encrypted key.
-#
-# A GPG identity (public key) file is expected as first argument,
-# whose associated private keys should be on a GnuPG smartcard device
-# (YubiKey, etc.).
-#
-# Usage:
-# install.sh <path/to/gpg.pub.key>
+# Create LUKS and LVM partitions
 
-set -u
-GPGPUBKEY="$1"
-set +u
-
-# Explicitly declare our LV array
 declare -A LV
+UEFI=
 
 # Load config or defaults
-if [ -e ./config ]; then
+if [ -r ./config ]; then
   . ./config
 else
-#  PKG_LIST="base-system lvm2 cryptsetup grub"
-  HOSTNAME="dom1.internal"
-  DEVNAME="sda"
-  VGNAME="vgpool"
-  CRYPTSETUP_OPTS=""
-  SWAP=0
-  SWAPSIZE="16G"
-  LV[root]="10G"
-  LV[var]="5G"
-  LV[home]="512M"
+  echo 'Must supply config' >&2
+  exit 1
 fi
 
 # Detect if we're in UEFI or legacy mode
@@ -42,17 +22,6 @@ CPU_VENDOR=$(grep vendor_id /proc/cpuinfo | awk '{print $3}' | uniq)
 if [ $CPU_VENDOR = "GenuineIntel" ]; then
   PKG_LIST="$PKG_LIST intel-ucode"
 fi
-
-# Import GPG key
-export GNUPGHOME=/root/.gnupg
-gpg2 --import $GPGPUBKEY
-
-# Create LUKS key and encrypt it with GPG
-LUKSKEY="luks.key"
-LUKSKEYENC="${LUKSKEY}.gpg"
-dd if=/dev/urandom count=64 > "$LUKSKEY"
-GPGID=$(gpg2 --with-colons --fingerprint | awk -F: '$1 == "fpr" {print $10;}' | head -1)
-echo "$PASSPHRASE" | gpg2 --passphrase-fd 0 --always-trust -r "$GPGID" --encrypt "$LUKSKEY"
 
 # Wipe entire drive
 dd if=/dev/zero of=/dev/${DEVNAME} bs=1M count=100
@@ -82,13 +51,10 @@ else
   DATAPART="2"
 fi
 
-# Open smart card
-gpg2 --card-status
-
 echo "[!] Encrypt root partition"
-gpg2 --quiet --decrypt "$LUKSKEYENC" | cryptsetup -d - ${CRYPTSETUP_OPTS} luksFormat -c aes-xts-plain64 -s 512 /dev/${DEVNAME}p${DATAPART}
+cryptsetup ${CRYPTSETUP_OPTS} luksFormat -c aes-xts-plain64 -s 512 /dev/${DEVNAME}p${DATAPART}
 echo "[!] Open root partition"
-gpg2 --quiet --decrypt "$LUKSKEYENC" | cryptsetup -d - luksOpen /dev/${DEVNAME}p${DATAPART} void
+cryptsetup -d - luksOpen /dev/${DEVNAME}p${DATAPART} void
 
 # Create volume group
 pvcreate /dev/mapper/void

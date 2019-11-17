@@ -2,13 +2,15 @@
 set -euo pipefail
 
 set -u
-GPGPUBKEY="$1"
-BACKUPFILE="$2"
+BACKUPFILE="$1"
 set +u
 
 # Load config
-if [ -e ./config ]; then
+if [ -r ./config ]; then
   . ./config
+else
+  echo 'Must supply config file' >&2
+  exit 1
 fi
 
 # Detect if we're in UEFI or legacy mode
@@ -23,16 +25,13 @@ else
 fi
 
 # Partition entire disk according to ./config (read and confirm settings!)
-./mkpart.sh "$GPGPUBKEY"
+./mkpart.sh
 
 # Restore backup
 # TODO: Deal with multiple .tpxz files (and .gpg files as well?)
 # Idea: allow passing one or more files in args, and extract them in order.
 # This would allow e.g. `./restore.sh pub.key root-*.gpg`.
 cat "$BACKUPFILE" | pixz -d | tar -xvpf - -C /mnt/
-
-# Overwrite the LUKS key with the new one created in mkpart.sh
-cp luks.key.gpg /mnt/boot/
 
 # Update the LUKS partition UUID
 DATAPARTUUID=$(lsblk -no uuid /dev/${DEVNAME}p${DATAPART} | tail -1)
