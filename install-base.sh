@@ -20,6 +20,14 @@ if [ $UEFI ]; then
   PKG_LIST="$PKG_LIST grub-x86_64-efi efibootmgr"
 fi
 
+if [ $UEFI ]; then
+  BOOTPART="2"
+  DATAPART="3"
+else
+  BOOTPART="1"
+  DATAPART="2"
+fi
+
 # Detect if we're on an Intel system
 CPU_VENDOR=$(grep vendor_id /proc/cpuinfo | awk '{print $3}' | uniq)
 if [ $CPU_VENDOR = "GenuineIntel" ]; then
