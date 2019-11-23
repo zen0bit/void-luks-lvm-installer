@@ -55,6 +55,7 @@ echo "$LANG $(echo ${LANG} | cut -f 2 -d .)" >> /mnt/etc/default/libc-locales
 chroot /mnt xbps-reconfigure -f glibc-locales
 
 # Add fstab entries
+unset LV[root]
 echo "LABEL=root  /       ext4    rw,relatime,data=ordered,discard    0 0" > /mnt/etc/fstab
 echo "LABEL=boot  /boot   ext2    defaults    0 0" >> /mnt/etc/fstab
 for FS in $(for key in "${!LV[@]}"; do printf '%s\n' "$key"; done| sort); do

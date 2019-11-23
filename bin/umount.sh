@@ -11,6 +11,8 @@ else
   exit 1
 fi
 
+pkill -9 -f gpg || true
+sync
 umount -R /mnt
 vgchange -an
 cryptsetup close "$VGNAME"
