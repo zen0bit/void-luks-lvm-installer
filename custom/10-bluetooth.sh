@@ -6,8 +6,20 @@ xbps-install -Sy bluez obexfs || true
 xbps-install -Sy pulseaudio-devel sbc-devel fdk-aac fdk-aac-devel \
   ffmpeg-devel libltdl-devel libbluetooth-devel || true
 
+export CLONEPATH="$HOME/src"
+
+if [ -n "$USERACCT" ]; then
+  usermod -aG bluetooth ${USERACCT}
+  CLONEPATH="/home/${USERACCT}/src"
+fi
+
+export BTMODPATH="$CLONEPATH/pulseaudio-modules-bt"
+
 # Build PulseAudio Bluetooth modules (AAC, APTX, APTX-HD, LDAC)
-mkdir ~/src
+su -w CLONEPATH,BTMODPATH - "${USERACCT-root}" bash -c '
+test -d $BTMODPATH && exit 0
+mkdir -p $CLONEPATH && cd $_
+
 git clone https://github.com/EHfive/pulseaudio-modules-bt.git
 cd pulseaudio-modules-bt
 git submodule update --init
@@ -15,25 +27,26 @@ git submodule update --init
 git clone https://github.com/EHfive/ldacBT.git
 cd ldacBT
 git submodule update --init
-mkdir build && cd build
+mkdir -p build && cd build
 cmake \
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DINSTALL_LIBDIR=/usr/lib \
     -DLDAC_SOFT_FLOAT=OFF \
     ../
-make install
-cd ../../
+'
 
+(cd "$BTMODPATH/build" && make install)
+
+su -w CLONEPATH,BTMODPATH - "${USERACCT-root}" bash -c '
+cd "$BTMODPATH"
 git -C pa/ checkout master
-mkdir build && cd build
+mkdir -p build && cd build
 cmake -DFORCE_LARGEST_PA_VERSION=ON ..
 make
-make install
+'
+
+(cd "$BTMODPATH/build" && make install)
 
 # Enable services
-ln -sfn /etc/sv/dbus /var/service/
-ln -sfn /etc/sv/bluetoothd /var/service/
-
-if [ -n "$USERACCT" ]; then
-  usermod -aG bluetooth ${USERACCT}
-fi
+ln -sfn /etc/sv/dbus /etc/runit/runsvdir/default/
+ln -sfn /etc/sv/bluetoothd /etc/runit/runsvdir/default/
