@@ -22,7 +22,7 @@ chroot /mnt grub-install /dev/${DEVNAME}
 
 GRUB_DEFAULT=$(grep '^GRUB_DEFAULT' /mnt/etc/default/grub | \
   sed -e 's:.*\([45]\.[0-9]\{1,\}[^-]*\|[0-9]\{1,\}\).*:\1:')
-  if [ -n "$GRUB_DEFAULT" -a -n "${GRUB_DEFAULT//[0-9]/}" ]; then
+if [ -n "$GRUB_DEFAULT" -a -n "${GRUB_DEFAULT//[0-9]/}" ]; then
     ADVMENUID=$(grep 'submenu.*gnulinux-advanced' \
       /mnt/boot/grub/grub.cfg | sed -e "s:.*'\(.*\)'.*:\1:")
     ADVITEMID=$(grep gnulinux-$GRUB_DEFAULT /mnt/boot/grub/grub.cfg | \
