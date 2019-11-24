@@ -18,8 +18,6 @@ for kv in $KERNEL_VERS; do
     chroot /mnt xbps-reconfigure -f "$kv"
 done
 
-chroot /mnt grub-install /dev/${DEVNAME}
-
 GRUB_DEFAULT=$(grep '^GRUB_DEFAULT' /mnt/etc/default/grub | \
   sed -e 's:.*\([45]\.[0-9]\{1,\}[^-]*\|[0-9]\{1,\}\).*:\1:')
 if [ -n "$GRUB_DEFAULT" -a -n "${GRUB_DEFAULT//[0-9]/}" ]; then
