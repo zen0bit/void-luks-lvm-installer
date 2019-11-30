@@ -18,3 +18,7 @@ PATH="/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin"
 
 # Applications
 PYTHON_VERSION=3.7.4
+
+# Go environment
+GOPATH=/home/$USERACCT/.local/go
+GOTMPDIR=/home/$USERACCT/.local/go/tmp

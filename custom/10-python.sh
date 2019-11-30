@@ -5,7 +5,7 @@ xbps-install -Sy bzip2-devel libffi-devel liblzma-devel libressl-devel \
   || true
 
 # Install pyenv, the specified Python version and additional packages
-su -w PYTHON_VERSION - ${USERACCT} bash -c '
+su -w PYTHON_VERSION - "${USERACCT}" bash -c '
 export PYENV_ROOT=$HOME/.pyenv PATH=$HOME/.pyenv/bin:$PATH
 test -d $PYENV_ROOT || git clone https://github.com/pyenv/pyenv.git $PYENV_ROOT
 eval "$(pyenv init -)"
