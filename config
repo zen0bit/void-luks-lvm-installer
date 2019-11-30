@@ -17,7 +17,7 @@ PASSPHRASE=""
 PATH="/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin"
 
 # Applications
-PYTHON_VERSION=3.7.4
+PYTHON_VERSION=3.8.0
 
 # Go environment
 GOPATH=/home/$USERACCT/.local/go
