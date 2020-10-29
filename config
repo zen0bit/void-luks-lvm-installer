@@ -1,13 +1,24 @@
 PKG_LIST="base-system lvm2 cryptsetup grub"
-HOSTNAME="dom1.internal"
-KEYMAP="fr_CH"
-TIMEZONE="Europe/Zurich"
+HOSTNAME="work"
+KEYMAP="us"
+TIMEZONE="Europe/Amsterdam"
 LANG="en_US.UTF-8"
-DEVNAME="sda"
-VGNAME="vgpool"
+DEVNAME="nvme0n1"
+VGNAME="void"
 CRYPTSETUP_OPTS="-q"
 SWAP=0
-SWAPSIZE="16G"
-LV[root]="10G"
-LV[var]="5G"
-LV[home]="512M"
+SWAPSIZE="0"
+LV[root]="200G"
+LV[var]="452G"
+LV[home]="300G"
+TMPSIZE="16G"
+USERACCT="ivan"
+PASSPHRASE=""
+PATH="/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin"
+
+# Applications
+PYTHON_VERSION=3.8.0
+
+# Go environment
+GOPATH=/home/$USERACCT/.local/go
+GOTMPDIR=/home/$USERACCT/.local/go/tmp

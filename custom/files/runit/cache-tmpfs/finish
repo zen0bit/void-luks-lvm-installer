@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# Persist cache from RAM disk to SSD
+rm -f /home/ivan/.cache
+rsync -ar /dev/shm/cache/ /home/ivan/.cache
