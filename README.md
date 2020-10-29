@@ -28,7 +28,7 @@ GnuPG smartcard as a hardware MFA device.
 Then:
 
 ```
-git clone https://github.com/imiric/void-luks-lvm-install.git
+git clone https://github.com/zen0bit/void-luks-lvm-installer.git
 cd void-luks-lvm-install
 ```
 Edit `config` to your taste.
