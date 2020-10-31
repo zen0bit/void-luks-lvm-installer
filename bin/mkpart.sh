@@ -68,9 +68,9 @@ fi
 
 # Format filesystems
 if [ $UEFI ]; then
-  mkfs.vfat /dev/${DEVNAME}p1
+  mkfs.vfat /dev/${DEVNAME}1
 fi
-mkfs.ext2 -L boot /dev/${DEVNAME}p${BOOTPART}
+mkfs.ext2 -L boot /dev/${DEVNAME}${BOOTPART}
 for FS in ${!LV[@]}; do
   mkfs.ext4 -L ${FS/\//_} /dev/mapper/${VGNAME}-${FS/\//_}
 done
