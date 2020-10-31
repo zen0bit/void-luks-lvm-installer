@@ -52,9 +52,9 @@ else
 fi
 
 echo "[!] Encrypt root partition"
-cryptsetup ${CRYPTSETUP_OPTS} luksFormat -c aes-xts-plain64 -s 512 /dev/${DEVNAME}p${DATAPART}
+cryptsetup ${CRYPTSETUP_OPTS} luksFormat -c aes-xts-plain64 -s 512 /dev/${DEVNAME}${DATAPART}
 echo "[!] Open root partition"
-cryptsetup -d - luksOpen /dev/${DEVNAME}p${DATAPART} void
+cryptsetup -d - luksOpen /dev/${DEVNAME}${DATAPART} void
 
 # Create volume group
 pvcreate /dev/mapper/void
